@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Master Pro - Study Game</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ color:#fff;
+ background:linear-gradient(135deg,#0f172a,#312e81,#6d28d9);
+ min-height:100vh;
+ padding:20px;
+}
+.container{max-width:700px;margin:auto}
+.header{text-align:center;padding:20px 10px}
+.header h1{font-size:clamp(28px,7vw,42px);margin:8px 0}
+.header p{color:#ddd6fe}
+.card{
+ background:rgba(255,255,255,.10);
+ border:1px solid rgba(255,255,255,.18);
+ border-radius:22px;
+ padding:22px;
+ margin:15px 0;
+ box-shadow:0 12px 30px rgba(0,0,0,.15);
+}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:10px;
+}
+.stat{
+ text-align:center;
+ background:rgba(255,255,255,.09);
+ border-radius:14px;
+ padding:13px 5px;
+}
+.stat span{display:block;font-size:12px;color:#ddd6fe}
+.stat strong{display:block;font-size:25px;margin-top:5px}
+h2{margin-top:0}
+.modes,.operations{
+ display:flex;
+ flex-wrap:wrap;
+ gap:9px;
+}
+button,select,input{font:inherit}
+button{
+ cursor:pointer;
+ border:0;
+ border-radius:12px;
+ padding:13px;
+ font-weight:bold;
+ transition:transform .15s,opacity .15s;
+}
+button:active{transform:scale(.97)}
+button:focus-visible,input:focus-visible,select:focus-visible{
+ outline:3px solid #facc15;
+ outline-offset:3px;
+}
+.mode,.op{
+ flex:1;
+ min-width:85px;
+ color:white;
+ background:rgba(255,255,255,.13);
+ border:1px solid rgba(255,255,255,.2);
+}
+.selected{background:#a78bfa;color:#1e1b4b}
+.primary{
+ background:linear-gradient(90deg,#facc15,#fb923c);
+ color:#301500;
+}
+.question{
+ font-size:clamp(34px,9vw,52px);
+ text-align:center;
+ font-weight:900;
+ margin:25px 0;
+ overflow-wrap:anywhere;
+}
+.answer-row{display:flex;gap:10px}
+input,select{
+ min-width:0;
+ padding:14px;
+ border:1px solid #c4b5fd;
+ border-radius:12px;
+ background:#fff;
+ color:#111827;
+}
+input{width:100%;font-size:20px}
+.answer-row button{min-width:100px}
+#feedback{
+ min-height:28px;
+ text-align:center;
+ margin-top:16px;
+ font-weight:bold;
+}
+.progress-bg{
+ height:9px;
+ background:rgba(255,255,255,.15);
+ border-radius:20px;
+ overflow:hidden;
+ margin-top:10px;
+}
+#progressBar{
+ width:0;height:100%;
+ background:#facc15;
+ transition:width .3s;
+}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions button{flex:1}
+.small{font-size:13px;color:#ddd6fe;line-height:1.6}
+.footer{text-align:center;color:#c4b5fd;padding:15px}
+.hidden{display:none!important}
+@media(max-width:400px){
+ body{padding:12px}
+ .card{padding:15px}
+ .answer-row{flex-direction:column}
+ .answer-row button{width:100%}
+ .stat strong{font-size:21px}
+}
+@media(prefers-reduced-motion:reduce){
+ *{transition:none!important}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header class="header">
+ <div style="font-size:45px">🎮 🧠 🏆</div>
+ <h1>Math Master Pro</h1>
+ <p>Learn Math • Play Smart • Become a Champion!</p>
+</header>
+
+<section class="card">
+ <div class="stats">
+  <div class="stat"><span>🏆 SCORE</span><strong id="score">0</strong></div>
+  <div class="stat"><span>⏱️ TIME</span><strong id="time">60</strong></div>
+  <div class="stat"><span>🚀 LEVEL</span><strong id="level">1</strong></div>
+ </div>
+</section>
+
+<section class="card">
+ <h2>🎯 Game Mode</h2>
+ <div class="modes">
+  <button class="mode selected" data-difficulty="easy">😊 Easy</button>
+  <button class="mode" data-difficulty="medium">🔥 Medium</button>
+  <button class="mode" data-difficulty="hard">💀 Hard</button>
+ </div>
+
+ <h2 style="margin-top:24px">➕ Choose Operation</h2>
+ <div class="operations">
+  <button class="op selected" data-operation="+">➕ जोड़</button>
+  <button class="op" data-operation="-">➖ घटाव</button>
+  <button class="op" data-operation="*">✖️ गुणा</button>
+  <button class="op" data-operation="/">➗ भाग</button>
+  <button class="op" data-operation="all">🎲 सभी</button>
+ </div>
+</section>
+
+<section class="card">
+ <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+  <strong id="questionCount">Question 1</strong>
+  <strong id="streak">🔥 Streak: 0</strong>
+ </div>
+
+ <div class="question" id="question">7 + 5 = ?</div>
+
+ <form id="answerForm">
+  <div class="answer-row">
+   <input id="answer" type="number" inputmode="numeric"
+    placeholder="अपना जवाब लिखो" aria-label="अपना जवाब लिखो" required>
+   <button class="primary" id="checkBtn" type="submit">Check ✓</button>
+  </div>
+ </form>
+
+ <div id="feedback" aria-live="polite">Start दबाओ और खेलना शुरू करो!</div>
+
+ <div class="progress-bg">
+  <div id="progressBar"></div>
+ </div>
+ <p class="small" id="progressText">अगले लेवल के लिए 5 सही जवाब चाहिए।</p>
+</section>
+
+<section class="card">
+ <h2>⚙️ Controls</h2>
+ <div class="actions">
+  <button class="primary" id="startBtn">▶ Start Game</button>
+  <button class="mode" id="soundBtn" type="button">🔇 Sound Off</button>
+ </div>
+ <p class="small">
+ सही जवाब पर 10 अंक मिलेंगे। लगातार सही जवाब देने पर बोनस मिलेगा।
+ गलत जवाब देने पर सही उत्तर दिखाया जाएगा।
+ </p>
+</section>
+
+<section class="card hidden" id="result">
+ <h2>🏁 Game Over!</h2>
+ <p id="finalScore"></p>
+ <p id="finalMessage"></p>
+ <button class="primary" id="againBtn">🔄 Play Again</button>
+</section>
+
+<footer class="footer">
+ <p>✨ Math Master Pro ✨</p>
+ <p class="small">Practice Every Day, Improve Every Day!</p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let score = 0;
+let seconds = 60;
+let level = 1;
+let streak = 0;
+let correctCount = 0;
+let levelProgress = 0;
+let currentAnswer = 0;
+let currentOperation = "+";
+let difficulty = "easy";
+let running = false;
+let soundOn = false;
+let timer = null;
+let questionNumber = 0;
+let locked = false;
+
+function playSound(isCorrect) {
+ if (!soundOn) return;
+ try {
+  const audio = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audio.createOscillator();
+  const gain = audio.createGain();
+  oscillator.connect(gain);
+  gain.connect(audio.destination);
+  oscillator.frequency.value = isCorrect ? 700 : 220;
+  gain.gain.value = 0.06;
+  oscillator.start();
+  oscillator.stop(audio.currentTime + 0.12);
+  oscillator.onended = () => audio.close();
+ } catch (error) {}
+}
+
+function randomInt(min, max) {
+ return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function makeQuestion() {
+ let operation = currentOperation;
+
+ if (operation === "all") {
+  operation = ["+", "-", "*", "/"][randomInt(0, 3)];
+ }
+
+ let max = difficulty === "easy" ? 10 :
+           difficulty === "medium" ? 30 : 100;
+
+ max = Math.min(max + (level - 1) * 5, 500);
+
+ let a = randomInt(1, max);
+ let b = randomInt(1, max);
+
+ if (operation === "-" && b > a) {
+  [a, b] = [b, a];
+ }
+
+ if (operation === "/") {
+  b = randomInt(1, difficulty === "easy" ? 10 :
+                   difficulty === "medium" ? 20 : 30);
+  currentAnswer = randomInt(1, difficulty === "easy" ? 10 :
+                               difficulty === "medium" ? 30 : 100);
+  a = b * currentAnswer;
+ } else if (operation === "+") {
+  currentAnswer = a + b;
+ } else if (operation === "-") {
+  currentAnswer = a - b;
+ } else {
+  currentAnswer = a * b;
+ }
+
+ const symbol = operation === "*" ? "×" :
+                operation === "/" ? "÷" : operation;
+
+ $("question").textContent = `${a} ${symbol} ${b} = ?`;
+ $("questionCount").textContent = `Question ${questionNumber + 1}`;
+ $("answer").value = "";
+ locked = false;
+}
+
+function updateStats() {
+ $("score").textContent = score;
+ $("time").textContent = seconds;
+ $("level").textContent = level;
+ $("streak").textContent = `🔥 Streak: ${streak}`;
+ $("progressBar").style.width = `${levelProgress / 5 * 100}%`;
+ $("progressText").textContent =
+  `${levelProgress}/5 सही जवाब — अगले लेवल के लिए`;
+}
+
+function startGame() {
+ clearInterval(timer);
+
+ score = 0;
+ seconds = 60;
+ level = 1;
+ streak = 0;
+ correctCount = 0;
+ levelProgress = 0;
+ questionNumber = 0;
+ running = true;
+
+ $("result").classList.add("hidden");
+ $("feedback").textContent = "चलो शुरू करते हैं! 💪";
+ $("startBtn").textContent = "↻ Restart Game";
+ $("checkBtn").disabled = false;
+
+ updateStats();
+ makeQuestion();
+
+ timer = setInterval(() => {
+  if (!running) return;
+  seconds--;
+  updateStats();
+
+  if (seconds <= 0) endGame();
+ }, 1000);
+}
+
+function endGame() {
+ running = false;
+ clearInterval(timer);
+ $("checkBtn").disabled = true;
+ $("startBtn").textContent = "▶ Start Game";
+ $("result").classList.remove("hidden");
+ $("finalScore").textContent =
+  `तुम्हारा स्कोर: ${score} | सही जवाब: ${correctCount}`;
+ $("finalMessage").textContent =
+  score >= 100 ? "शानदार! तुम Math Champion हो! 🏆" :
+  "अच्छी कोशिश! दोबारा खेलो और अपना स्कोर बढ़ाओ! 💪";
+ $("feedback").textContent = "⏰ समय समाप्त!";
+ $("result").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+$("answerForm").addEventListener("submit", event => {
+ event.preventDefault();
+
+ if (!running || locked) {
+  if (!running) $("feedback").textContent = "पहले Start Game दबाओ!";
+  return;
+ }
+
+ const raw = $("answer").value.trim();
+
+ if (raw === "" || !Number.isFinite(Number(raw))) {
+  $("feedback").textContent = "कृपया सही उत्तर लिखो!";
+  return;
+ }
+
+ locked = true;
+ questionNumber++;
+
+ if (Number(raw) === currentAnswer) {
+  streak++;
+  correctCount++;
+  levelProgress++;
+
+  const points = 10 + Math.min(streak - 1, 10) * 2;
+  score += points;
+
+  $("feedback").textContent = `🎉 सही जवाब! +${points} अंक`;
+  playSound(true);
+
+  if (levelProgress >= 5) {
+   level++;
+   levelProgress = 0;
+   $("feedback").textContent += ` 🚀 Level ${level}!`;
+  }
+ } else {
+  streak = 0;
+  $("feedback").textContent =
+   `🙂 सही उत्तर ${currentAnswer} था। अगला सवाल करो!`;
+  playSound(false);
+ }
+
+ updateStats();
+
+ if (running) makeQuestion();
+});
+
+document.querySelectorAll("[data-operation]").forEach(button => {
+ button.addEventListener("click", () => {
+  currentOperation = button.dataset.operation;
+
+  document.querySelectorAll("[data-operation]").forEach(item => {
+   item.classList.toggle("selected", item === button);
+  });
+
+  if (running) {
+   $("feedback").textContent = "नया ऑपरेशन चुना गया!";
+   makeQuestion();
+  }
+ });
+});
+
+document.querySelectorAll("[data-difficulty]").forEach(button => {
+ button.addEventListener("click", () => {
+  difficulty = button.dataset.difficulty;
+
+  document.querySelectorAll("[data-difficulty]").forEach(item => {
+   item.classList.toggle("selected", item === button);
+  });
+
+  if (running) makeQuestion();
+ });
+});
+
+$("startBtn").addEventListener("click", startGame);
+$("againBtn").addEventListener("click", startGame);
+
+$("soundBtn").addEventListener("click", () => {
+ soundOn = !soundOn;
+ $("soundBtn").textContent =
+  soundOn ? "🔊 Sound On" : "🔇 Sound Off";
+});
+
+updateStats();
+</script>
+</body>
+  </html>
